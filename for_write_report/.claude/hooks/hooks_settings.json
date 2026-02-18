@@ -1,0 +1,45 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '📚 Research Project - Research Report Generation System' && echo '' && echo 'Available skills:' && ls -1 */SKILL.md 2>/dev/null | xargs -I {} dirname {} | xargs -I {} basename {} && echo '' && echo 'Key files: report.md, update_report.md, report_structure.md' && echo 'Output: report/*.pdf'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/discord-notify.sh 'Task completed successfully! ✅' '3066993'"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/discord-notify.sh 'Permission request: User action required 🔔' '16753920'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file_path=\"$TOOL_FILE_PATH\"; if [ -n \"$file_path\" ] && [[ \"$file_path\" == *.tex ]]; then echo ''; echo '📋 Quality Check Reminder:'; echo '  - Verify Japanese rendering (特殊文字, 長音記号)'; echo '  - Check all figure/table captions and numbering'; echo '  - Confirm section structure and references'; echo '  - Run typo and grammar checks after compilation'; echo ''; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
