@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch"
+    ]
+  },
+  "mcpServers": {
+    "fetch": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic-ai/mcp-fetch@latest"
+      ],
+      "description": "Web fetch server for accessing academic papers, patents, and other web resources during hypothesis refinement research."
+    }
+  }
+}
