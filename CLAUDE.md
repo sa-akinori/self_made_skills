@@ -10,18 +10,18 @@ Claude Code のカスタムスキル集です。
 
 **使い方:**
 
-1. プロジェクトルートに `hypothesis.txt` を作成し、検証したい仮説を記載する
+1. プロジェクトルートに `hypothesis.md` を作成し、検証したい仮説を記載する
 2. `/hypothesis-refinement` を実行する
 
 ```
 /hypothesis-refinement
 ```
 
-`hypothesis.txt` にはテキストだけでなく、図表やASCIIアート、構造化された説明も自由に記載できます。
+`hypothesis.md` にはテキストだけでなく、図表やASCIIアート、構造化された説明も自由に記載できます。
 
 ## プロジェクト構成
 
-- `hypothesis.txt` — ユーザーが仮説を記載する入力ファイル（各自で作成）
+- `hypothesis.md` — ユーザーが仮説を記載する入力ファイル（各自で作成）
 - `hypothesis_refinement/` — 仮説検証スキルの本体・テンプレート・ドキュメント
 - `.claude/commands/` — Claude Code スラッシュコマンド定義
 - `.claude/settings.json` — MCP サーバー等のプロジェクト設定

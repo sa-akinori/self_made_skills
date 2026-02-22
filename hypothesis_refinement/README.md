@@ -28,11 +28,11 @@ hypothesis_refinement/
 
 ### 1. 仮説ファイルの作成
 
-プロジェクトルートに `hypothesis.txt` を作成し、検証したい仮説を記載してください。
+プロジェクトルートに `hypothesis.md` を作成し、検証したい仮説を記載してください。
 
 ```bash
 # 例
-cat > hypothesis.txt << 'EOF'
+cat > hypothesis.md << 'EOF'
 仮説: 腸内細菌叢の多様性が睡眠の質に直接的な因果関係を持つ
 
 背景:
@@ -58,7 +58,7 @@ EOF
 /hypothesis-refinement
 ```
 
-`hypothesis.txt` が見つからない場合は、作成を促すメッセージが表示されます。
+`hypothesis.md` が見つからない場合は、作成を促すメッセージが表示されます。
 
 #### 直接利用
 
