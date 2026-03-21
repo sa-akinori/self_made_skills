@@ -30,10 +30,9 @@
 |---|---|---|
 | Claude Code | オーケストレーション・執筆・レビュー | 必須 |
 | Docker | devcontainer（安全な実行環境） | 強く推奨 |
-| XeLaTeX + 日本語フォント | PDF生成 | 必須 |
-| Python 3 | 図表生成・参考文献ダウンロード | 必須 |
-| google-genai + Pillow | 概念図の生成（Nano Banana 2） | オプション |
-| wkhtmltopdf | ウェブページのPDF変換 | オプション |
+| Gemini APIキー | 概念図の生成（Nano Banana 2） | オプション |
+
+LaTeX環境、Python、日本語フォントなどはDockerfileに記述するか、Claude Codeが実行時に自動インストールします。
 
 ### Step 1: Research Kit のクローン
 
@@ -84,120 +83,79 @@ EOF
 
 完璧な文章である必要はありません。箇条書きのメモで十分です。オーケストレーションが自動的に拡張・構造化します。
 
-### Step 3: Devcontainer のセットアップ（推奨）
+### Step 3: Docker環境の起動（推奨）
 
-Docker devcontainer内での実行を推奨します。コンテナ内なら`--dangerously-skip-permissions`を安全に使え、許可プロンプトなしで全自動実行できます。
+Research KitにはDockerfileが同梱されています。LaTeX、Python、Claude Code、日本語フォントなど必要な環境がすべてプリインストールされています。
 
 **メリット:**
 
 - 許可プロンプトが一切出ない（`--dangerously-skip-permissions`が安全に使える）
+- 環境構築不要（LaTeX、Python等はDockerイメージに含まれている）
 - ホスト環境を汚さない（壊れたらコンテナを破棄するだけ）
-- マウントしたフォルダ以外にはアクセス不可
+- プロジェクトディレクトリ以外にはアクセス不可
 
 **3-1. Docker のインストール**
 
-Docker Desktopをインストールしてください: <https://docs.docker.com/get-docker/>
-
-**3-2. 公式テンプレートの取得**
-
-Anthropicが公式のdevcontainerテンプレートを公開しています。以下のコマンドで3ファイルをダウンロードしてください：
-
 ```bash
-mkdir -p .devcontainer
-
-wget -O .devcontainer/devcontainer.json \
-  https://raw.githubusercontent.com/anthropics/claude-code/main/.devcontainer/devcontainer.json
-
-wget -O .devcontainer/Dockerfile \
-  https://raw.githubusercontent.com/anthropics/claude-code/main/.devcontainer/Dockerfile
-
-wget -O .devcontainer/init-firewall.sh \
-  https://raw.githubusercontent.com/anthropics/claude-code/main/.devcontainer/init-firewall.sh
-```
-
-元リポジトリ: <https://github.com/anthropics/claude-code/tree/main/.devcontainer>
-
-**3-3. workspaceMountの変更**
-
-ダウンロードした`devcontainer.json`を開き、`workspaceMount`を自分のプロジェクトパスに変更してください：
-
-```json
-"workspaceMount": "source=/path/to/self_made_skills/for_write_report,target=/workspace,type=bind,consistency=delegated",
-"workspaceFolder": "/workspace"
-```
-
-この設定により、指定したディレクトリのみがコンテナ内にマウントされ、ホストの他のディレクトリには一切アクセスできません。
-
-**3-4. コンテナの起動**
-
-```bash
-# VSCodeの場合
-# Command Palette → "Dev Containers: Reopen in Container"
-
-# CLIの場合
-npm install -g @devcontainers/cli
-devcontainer up --workspace-folder .
-devcontainer exec --workspace-folder . claude --dangerously-skip-permissions
-```
-
-**注意:** Dockerfileにはデフォルトではnode.js環境のみが含まれています。Research Kitで必要なLaTeX環境やPythonパッケージは、Dockerfileに追記するか、コンテナ起動後にStep 4〜5を実行してください。
-
-**Devcontainerを使わない場合:** ホスト環境で直接実行できますが、毎回許可プロンプトが表示されます。`.claude/settings.local.json`のpermissions設定で頻度を減らすことは可能です。
-
-### Step 4: LaTeX環境のインストール
-
-```bash
-# XeLaTeX + 日本語フォント
+# Ubuntu/Debian
 sudo apt-get update
-sudo apt-get install -y texlive-xetex texlive-lang-japanese \
-  fonts-noto-cjk fonts-ipafont fonts-ipaexfont
+sudo apt-get install -y docker.io docker-compose-v2
+sudo usermod -aG docker $USER
+
+# 反映のため再ログイン
+newgrp docker
 
 # 確認
-which xelatex
+docker --version
 ```
 
-### Step 5: Python依存関係のインストール
+**3-2. 初回認証（サブスクリプションの場合）**
+
+Claudeのサブスクリプション（Pro/Max）を使う場合、先にホスト側でログインしてください。コンテナはこの認証情報を共有します：
 
 ```bash
-pip install google-genai Pillow matplotlib seaborn
+# ホスト側でClaude Codeにログイン（初回のみ）
+claude
+# ブラウザが開くのでログイン → 完了したら /exit で終了
 ```
 
-### Step 6: Gemini APIキーの設定（概念図生成用、オプション）
+APIキー（従量課金）を使う場合はこの手順は不要です。
 
-概念図・模式図の生成にGoogle Gemini API（Nano Banana 2）を使用します。データグラフのみの場合は不要です。
+**⚠️ 認証情報に関する注意:**
+
+- Claude Codeの認証情報（OAuthトークン）はホームディレクトリの`~/.claude/`に保存されます（プロジェクトディレクトリではありません）
+- `docker-run.sh`はこの`~/.claude/`をコンテナ内にマウントすることでログインを共有します
+- コンテナ内から`~/.claude/`への書き込みが可能なため、`--dangerously-skip-permissions`で実行中にホスト側の認証情報が書き換えられる可能性があります。万が一ログインできなくなった場合は、ホスト側で`claude`を再実行してログインし直してください
+
+**3-3. コンテナの起動**
 
 ```bash
-# 1. 無料のAPIキーを取得:
-#    https://aistudio.google.com/apikey
+# 対話モードで起動（中でclaudeコマンドを自分で実行）
+./docker-run.sh
 
-# 2. 環境変数を設定
+# 自動モードで起動（--dangerously-skip-permissions付き）
+./docker-run.sh --auto
+```
+
+初回はDockerイメージのビルドに数分かかります。2回目以降は即起動します。
+
+**Gemini APIキーを使う場合:**
+
+```bash
 export GEMINI_API_KEY="あなたのキー"
-
-# 永続化する場合:
-echo 'export GEMINI_API_KEY="あなたのキー"' >> ~/.bashrc
-source ~/.bashrc
+./docker-run.sh --auto
 ```
 
-### Step 7: エージェントの確認
+APIキーは <https://aistudio.google.com/apikey> から無料で取得できます。概念図・模式図の生成に使用します（データグラフのみの場合は不要）。
 
-```bash
-# エージェントファイルが配置されているか確認
-ls .claude/agents/
-# → report-architect.md  report-writer.md  report-reviewer.md
+**Dockerを使わない場合:** ホスト環境で直接実行できますが、LaTeX・Python等を手動でインストールする必要があり、毎回許可プロンプトも表示されます。
 
-# Claude Codeセッションを（再）起動
-claude -r
-```
-
-### Step 8: オプションツール
+### Step 4: オプション設定
 
 ```bash
 # Discord通知（オプション）
 nano .claude/hooks/discord-notify.sh
 # DISCORD_WEBHOOK_URL を設定
-
-# ウェブページPDF化（オプション）
-sudo apt-get install wkhtmltopdf
 ```
 
 ## 🚀 クイックスタート
@@ -448,25 +406,23 @@ python3 .claude/scripts/download-references.py -o custom/path
 ## 📁 ディレクトリ構造
 
 ```
-/home/sato/Research/Kit/
-├── report.md                          # 初期トピック定義
-├── update_report.md                   # 拡張されたトピック
-├── report_structure.md                # レポート構造
+project-directory/
+├── Dockerfile                         # Docker環境定義
+├── docker-run.sh                      # Docker起動スクリプト
+├── report.md                          # 初期トピック定義（ユーザーが作成）
+├── update_report.md                   # 拡張されたトピック（自動生成）
+├── report_structure.md                # レポート構造（自動生成）
 │
 ├── report/                            # 生成されたレポート
-│   ├── v1/                            # バージョン1
-│   │   ├── {name}.pdf                 # 最終PDF
+│   ├── v1/                            # バージョン1（初稿）
+│   │   ├── {name}.pdf                 # PDF
 │   │   ├── {name}.tex                 # LaTeXソース
 │   │   ├── figures/                   # 図表
-│   │   ├── review_log.md             # レビュー指摘
+│   │   └── review_log.md             # レビュー指摘
+│   ├── v2/                            # バージョン2（修正版）
+│   │   ├── ...
 │   │   └── revision_log.md           # 修正記録
-│   ├── v2/                            # バージョン2
 │   └── ...
-│
-├── versions/                          # バージョン履歴（スナップショット）
-│   ├── v1/
-│   ├── v2/
-│   └── .metadata
 │
 ├── references/                        # 参考文献
 │   └── papers/                        # ダウンロードしたPDF
@@ -485,6 +441,7 @@ python3 .claude/scripts/download-references.py -o custom/path
 │   │   ├── discord-notify.sh          # Discord通知スクリプト
 │   │   └── README.md                  # Hooks設定ガイド
 │   └── scripts/
+│       ├── generate_image.py          # 概念図生成（Gemini API）
 │       ├── version-manager.sh         # バージョン管理
 │       ├── download-references.py     # 参考文献ダウンロード
 │       └── README.md                  # スクリプト使い方
@@ -640,12 +597,11 @@ model: sonnet  # 高速・低コスト（レビュー向け）
 
 **問題:** LaTeXコンパイルエラー
 
-**解決策:** 「セットアップ」のStep 4を確認してください。
+**解決策:** LaTeX環境がインストールされているか確認してください。Dockerfileに追記するか、手動でインストールしてください：
 
 ```bash
-# インストール確認
+sudo apt-get install -y texlive-xetex texlive-lang-japanese fonts-noto-cjk
 which xelatex
-fc-list | grep -i noto
 ```
 
 ### エージェントが起動しない
@@ -666,7 +622,7 @@ fc-list | grep -i noto
 
 1. Gemini APIキーが設定されているか確認: `echo $GEMINI_API_KEY`
 2. 依存パッケージを確認: `pip install google-genai Pillow`
-3. APIキーの取得方法は「セットアップ」のStep 6を参照
+3. APIキーの取得方法は「セットアップ」のStep 4を参照
 
 ### レビューループが終わらない
 
