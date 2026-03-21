@@ -1,0 +1,58 @@
+#!/bin/bash
+#
+# Research Kit Docker launcher
+#
+# Usage:
+#   ./docker-run.sh                  # Start interactive shell
+#   ./docker-run.sh --auto           # Start Claude Code with --dangerously-skip-permissions
+#
+# Environment variables (set before running):
+#   GEMINI_API_KEY     - Google Gemini API key (optional, for conceptual figures)
+#   ANTHROPIC_API_KEY  - Anthropic API key (if not using Claude subscription)
+#
+
+set -e
+
+IMAGE_NAME="research-kit"
+CONTAINER_NAME="research-kit-$(date +%s)"
+PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Build image if not exists
+if ! docker image inspect "${IMAGE_NAME}" >/dev/null 2>&1; then
+    echo "Building Research Kit Docker image (first time only, may take several minutes)..."
+    docker build -t "${IMAGE_NAME}" "${PROJECT_DIR}"
+fi
+
+# Construct env flags
+ENV_FLAGS=""
+if [ -n "${GEMINI_API_KEY}" ]; then
+    ENV_FLAGS="${ENV_FLAGS} -e GEMINI_API_KEY=${GEMINI_API_KEY}"
+fi
+if [ -n "${ANTHROPIC_API_KEY}" ]; then
+    ENV_FLAGS="${ENV_FLAGS} -e ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}"
+fi
+
+# Run mode
+if [ "$1" = "--auto" ]; then
+    echo "Starting Claude Code in autonomous mode..."
+    echo "  Project: ${PROJECT_DIR}"
+    echo "  Mounted: /workspace"
+    docker run -it --rm \
+        --name "${CONTAINER_NAME}" \
+        -v "${PROJECT_DIR}:/workspace" \
+        ${ENV_FLAGS} \
+        "${IMAGE_NAME}" \
+        claude --dangerously-skip-permissions
+else
+    echo "Starting Research Kit container..."
+    echo "  Project: ${PROJECT_DIR}"
+    echo "  Mounted: /workspace"
+    echo ""
+    echo "  Run 'claude' to start Claude Code"
+    echo "  Run 'claude --dangerously-skip-permissions' for autonomous mode"
+    docker run -it --rm \
+        --name "${CONTAINER_NAME}" \
+        -v "${PROJECT_DIR}:/workspace" \
+        ${ENV_FLAGS} \
+        "${IMAGE_NAME}"
+fi
