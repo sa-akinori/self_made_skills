@@ -1,0 +1,13 @@
+{
+  "type": "bar",
+  "description": "Template for bar charts showing categorical comparisons",
+  "data": {
+    "labels": ["Category 1", "Category 2", "Category 3", "Category 4"],
+    "values": [25, 40, 30, 50]
+  },
+  "options": {
+    "title": "Sample Bar Chart",
+    "xlabel": "Categories",
+    "ylabel": "Values"
+  }
+}

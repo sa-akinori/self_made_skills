@@ -1,0 +1,15 @@
+{
+  "type": "table",
+  "description": "Template for structured data tables",
+  "data": {
+    "headers": ["Item", "Value 1", "Value 2", "Description"],
+    "rows": [
+      ["Item A", "10", "20", "Description of Item A"],
+      ["Item B", "15", "25", "Description of Item B"],
+      ["Item C", "20", "30", "Description of Item C"]
+    ]
+  },
+  "options": {
+    "title": "Sample Data Table"
+  }
+}
