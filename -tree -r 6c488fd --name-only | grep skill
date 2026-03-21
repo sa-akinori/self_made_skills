@@ -1,0 +1,50 @@
+[33mcommit 6c488fd7af8b874829dc0153ba4719b5cd2a01a4[m
+Author: sato-akinori-for-study <satoakinoriforstudy@gmail.com>
+Date:   Sat Mar 21 17:24:35 2026 +0900
+
+    commit
+
+ for_write_report/.claude/agents/report-architect.md                                                    |   69 [32m++++[m
+ for_write_report/.claude/agents/report-reviewer.md                                                     |  125 [32m+++++++[m
+ for_write_report/.claude/agents/report-writer.md                                                       |  184 [32m++++++++++[m
+ for_write_report/.claude/hooks/README.md                                                               |  131 [32m+++++++[m
+ for_write_report/.claude/hooks/discord-notify.sh                                                       |   46 [32m+++[m
+ for_write_report/.claude/hooks/hooks_settings.json                                                     |   45 [32m+++[m
+ for_write_report/.claude/hooks/slack-notify.sh                                                         |   45 [32m+++[m
+ for_write_report/.claude/scripts/README.md                                                             |  301 [32m++++++++++++++++[m
+ for_write_report/.claude/scripts/download-references.py                                                |  501 [32m++++++++++++++++++++++++++[m
+ for_write_report/.claude/scripts/generate_image.py                                                     |   81 [32m+++++[m
+ for_write_report/.claude/scripts/version-manager.sh                                                    |  258 [32m+++++++++++++[m
+ for_write_report/.claude/skills/research-report-enhancer/SKILL.md                                      |  298 [32m+++++++++++++++[m
+ for_write_report/.claude/skills/research-report-enhancer/SKILL.md:Zone.Identifier                      |    0
+ for_write_report/.claude/skills/research-report-structure-planner/SKILL.md                             |  323 [32m+++++++++++++++++[m
+ for_write_report/.claude/skills/research-report-structure-planner/assets/template_general.md           |   65 [32m++++[m
+ for_write_report/.claude/skills/research-report-structure-planner/references/detail_levels.md          |  509 [32m++++++++++++++++++++++++++[m
+ for_write_report/.claude/skills/research-report-structure-planner/references/report_types.md           |  190 [32m++++++++++[m
+ for_write_report/.claude/skills/research-report-writer-orchestration/README.md                         |  270 [32m++++++++++++++[m
+ for_write_report/.claude/skills/research-report-writer-orchestration/SKILL.md                          |  977 [32m++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ for_write_report/.claude/skills/research-report-writer-orchestration/procedure.md                      | 1194 [32m+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[m
+ for_write_report/.claude/skills/research-report-writer/CHANGELOG.md                                    |  168 [32m+++++++++[m
+ for_write_report/.claude/skills/research-report-writer/README.md                                       |  313 [32m++++++++++++++++[m
+ for_write_report/.claude/skills/research-report-writer/SKILL.md                                        |  839 [32m+++++++++++++++++++++++++++++++++++++++++++[m
+ for_write_report/.claude/skills/research-report-writer/USAGE_GUIDE.md                                  |  195 [32m++++++++++[m
+ for_write_report/.claude/skills/research-report-writer/assets/figure_templates/bar_chart_template.json |   13 [32m+[m
+ for_write_report/.claude/skills/research-report-writer/assets/figure_templates/table_template.json     |   15 [32m+[m
+ for_write_report/.claude/skills/research-report-writer/references/citation_formats.md                  |  399 [32m+++++++++++++++++++++[m
+ for_write_report/.claude/skills/research-report-writer/references/deep_search_strategies.md            |  506 [32m++++++++++++++++++++++++++[m
+ for_write_report/.claude/skills/research-report-writer/references/latex_template.md                    |  389 [32m++++++++++++++++++++[m
+ for_write_report/.claude/skills/research-report-writer/references/mcp_selection.md                     |  504 [32m++++++++++++++++++++++++++[m
+ for_write_report/.claude/skills/research-report-writer/references/writing_styles.md                    |  325 [32m+++++++++++++++++[m
+ for_write_report/.claude/skills/research-report-writer/scripts/convert_to_latex.py                     |  402 [32m+++++++++++++++++++++[m
+ for_write_report/.claude/skills/research-report-writer/scripts/generate_figure.py                      |  274 [32m++++++++++++++[m
+ for_write_report/.claude/skills/skill-mcp-installer/SKILL.md                                           |  643 [32m+++++++++++++++++++++++++++++++++[m
+ for_write_report/.claude/skills/skill-mcp-installer/SKILL.md:Zone.Identifier                           |    0
+ for_write_report/.claude/skills/skill-mcp-installer/scripts/__pycache__/batch_install.cpython-313.pyc  |  Bin [31m0[m -> [32m22711[m bytes
+ for_write_report/.claude/skills/skill-mcp-installer/scripts/batch_install.py                           |  594 [32m++++++++++++++++++++++++++++++[m
+ for_write_report/.claude/skills/skill-mcp-installer/scripts/batch_install.py:Zone.Identifier           |    0
+ for_write_report/.claude/skills/skill-mcp-installer/scripts/install_from_url.py                        |  104 [32m++++++[m
+ for_write_report/.claude/skills/skill-mcp-installer/scripts/install_from_url.py:Zone.Identifier        |    0
+ for_write_report/.claude/skills/skill-recommender/SKILL.md                                             |  316 [32m++++++++++++++++[m
+ for_write_report/README.md                                                                             |  795 [32m++++++++++++++++++++++++++++++++++++++++[m
+ for_write_report/report.md                                                                             |    9 [32m+[m
+ 43 files changed, 12415 insertions(+)
