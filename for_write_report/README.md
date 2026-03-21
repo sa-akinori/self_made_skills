@@ -155,7 +155,7 @@ APIキーは <https://aistudio.google.com/apikey> から無料で取得できま
 ```bash
 # Discord通知（オプション）
 nano .claude/hooks/discord-notify.sh
-# DISCORD_WEBHOOK_URL を設定
+# DISCORD_WEBHOOK_URL を設定.
 ```
 
 ## 🚀 クイックスタート
