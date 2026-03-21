@@ -8,62 +8,220 @@
 
 - **📝 自動レポート生成** - 構造化されたLaTeXレポートを自動作成
 - **🔍 深い文献調査** - MCP serverを使用した包括的な情報収集
-- **✨ 品質管理** - 自動的な誤字脱字・内容チェックと修正
+- **✨ 品質管理** - レビュアーエージェントによる指摘 → ライターエージェントによる修正のフィードバックループ
 - **🌐 多様なレポートタイプ** - 学術論文、ビジネスレポート、市場調査など
 
-### 新機能 (v2.0)
+### 新機能 (v3.0)
 
-- **📸 バージョン管理** - レポート全体をv1, v2, v3...として管理
+- **🤖 サブエージェント連携** - Opus/Sonnetを使い分ける3つの専門エージェント
+- **🔄 ライター↔レビュアーループ** - 執筆と校閲の自動フィードバック（最大3回）
+- **📸 バージョン管理** - レポートを`report/v1/`, `report/v2/`...として管理
 - **📚 参考文献自動ダウンロード** - 引用した論文のPDFを自動取得
 - **🌐 ウェブページPDF化** - 参照したウェブページを自動的にPDF変換
 - **📖 専門用語の自動説明** - 技術用語を初出時に自動的に解説
 - **🔔 Discord通知** - タスク完了・許可要求時に自動通知
 - **📱 NotebookLM連携** - すべての参考資料をNotebookLMで分析可能
 
-## 🚀 クイックスタート
+## 📋 セットアップ
 
-### 1. 初期セットアップ
+### 必要なソフトウェア
+
+| ソフトウェア | 用途 | 必須/オプション |
+|---|---|---|
+| Claude Code | オーケストレーション・執筆・レビュー | 必須 |
+| Docker | devcontainer（安全な実行環境） | 強く推奨 |
+| XeLaTeX + 日本語フォント | PDF生成 | 必須 |
+| Python 3 | 図表生成・参考文献ダウンロード | 必須 |
+| google-genai + Pillow | 概念図の生成（Nano Banana 2） | オプション |
+| wkhtmltopdf | ウェブページのPDF変換 | オプション |
+
+### Step 1: Research Kit のクローン
+
+プロジェクトディレクトリで以下を実行してください：
 
 ```bash
-cd /home/sato/Research/Kit
+# リポジトリをクローン
+git clone https://github.com/sa-akinori/self_made_skills.git
 
-# Discord通知の設定（オプション）
-nano .claude/hooks/discord-notify.sh
-# DISCORD_WEBHOOK_URL を設定
+# for_write_report の中身だけをプロジェクトディレクトリにコピー
+cp -r self_made_skills/for_write_report/* .
+cp -r self_made_skills/for_write_report/.claude .
 
-# ウェブページPDF化ツールのインストール（オプション）
-sudo apt-get install wkhtmltopdf
+# 不要なファイルを削除
+rm -rf self_made_skills
 ```
 
-### 2. レポートトピックを定義
+このディレクトリにスキル、エージェント、スクリプトなど必要なファイルがすべて配置されます。
 
-`report.md` を作成：
+### Step 2: report.md の作成
 
-```markdown
+レポートのテーマと調査項目を `report.md` に箇条書きで記述します：
+
+```bash
+cat > report.md << 'EOF'
 # あなたの研究トピック
 
 - 調査項目1
 - 調査項目2
 - 調査項目3
+- 関連して調べたいこと
+EOF
 ```
 
-### 3. 完全自動でレポート生成
+例（Kit阻害剤の場合）：
+
+```markdown
+# Kitの阻害剤開発
+
+- Kitとは何か？
+- Mutantがどこに入りやすいのか？
+- Mutantにつよい阻害剤設計
+- MDでうまく行った事例はあるのか
+- 製薬企業の開発動向
+- 選択的にKitを阻害する薬剤
+- 関連して、選択的Kinase阻害剤の設計方法の指針やアプローチ
+```
+
+完璧な文章である必要はありません。箇条書きのメモで十分です。オーケストレーションが自動的に拡張・構造化します。
+
+### Step 3: Devcontainer のセットアップ（推奨）
+
+Docker devcontainer内での実行を推奨します。コンテナ内なら`--dangerously-skip-permissions`を安全に使え、許可プロンプトなしで全自動実行できます。
+
+**メリット:**
+
+- 許可プロンプトが一切出ない（`--dangerously-skip-permissions`が安全に使える）
+- ホスト環境を汚さない（壊れたらコンテナを破棄するだけ）
+- マウントしたフォルダ以外にはアクセス不可
+
+**3-1. Docker のインストール**
+
+Docker Desktopをインストールしてください: <https://docs.docker.com/get-docker/>
+
+**3-2. 公式テンプレートの取得**
+
+Anthropicが公式のdevcontainerテンプレートを公開しています。以下のコマンドで3ファイルをダウンロードしてください：
+
+```bash
+mkdir -p .devcontainer
+
+wget -O .devcontainer/devcontainer.json \
+  https://raw.githubusercontent.com/anthropics/claude-code/main/.devcontainer/devcontainer.json
+
+wget -O .devcontainer/Dockerfile \
+  https://raw.githubusercontent.com/anthropics/claude-code/main/.devcontainer/Dockerfile
+
+wget -O .devcontainer/init-firewall.sh \
+  https://raw.githubusercontent.com/anthropics/claude-code/main/.devcontainer/init-firewall.sh
+```
+
+元リポジトリ: <https://github.com/anthropics/claude-code/tree/main/.devcontainer>
+
+**3-3. workspaceMountの変更**
+
+ダウンロードした`devcontainer.json`を開き、`workspaceMount`を自分のプロジェクトパスに変更してください：
+
+```json
+"workspaceMount": "source=/path/to/self_made_skills/for_write_report,target=/workspace,type=bind,consistency=delegated",
+"workspaceFolder": "/workspace"
+```
+
+この設定により、指定したディレクトリのみがコンテナ内にマウントされ、ホストの他のディレクトリには一切アクセスできません。
+
+**3-4. コンテナの起動**
+
+```bash
+# VSCodeの場合
+# Command Palette → "Dev Containers: Reopen in Container"
+
+# CLIの場合
+npm install -g @devcontainers/cli
+devcontainer up --workspace-folder .
+devcontainer exec --workspace-folder . claude --dangerously-skip-permissions
+```
+
+**注意:** Dockerfileにはデフォルトではnode.js環境のみが含まれています。Research Kitで必要なLaTeX環境やPythonパッケージは、Dockerfileに追記するか、コンテナ起動後にStep 4〜5を実行してください。
+
+**Devcontainerを使わない場合:** ホスト環境で直接実行できますが、毎回許可プロンプトが表示されます。`.claude/settings.local.json`のpermissions設定で頻度を減らすことは可能です。
+
+### Step 4: LaTeX環境のインストール
+
+```bash
+# XeLaTeX + 日本語フォント
+sudo apt-get update
+sudo apt-get install -y texlive-xetex texlive-lang-japanese \
+  fonts-noto-cjk fonts-ipafont fonts-ipaexfont
+
+# 確認
+which xelatex
+```
+
+### Step 5: Python依存関係のインストール
+
+```bash
+pip install google-genai Pillow matplotlib seaborn
+```
+
+### Step 6: Gemini APIキーの設定（概念図生成用、オプション）
+
+概念図・模式図の生成にGoogle Gemini API（Nano Banana 2）を使用します。データグラフのみの場合は不要です。
+
+```bash
+# 1. 無料のAPIキーを取得:
+#    https://aistudio.google.com/apikey
+
+# 2. 環境変数を設定
+export GEMINI_API_KEY="あなたのキー"
+
+# 永続化する場合:
+echo 'export GEMINI_API_KEY="あなたのキー"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+### Step 7: エージェントの確認
+
+```bash
+# エージェントファイルが配置されているか確認
+ls .claude/agents/
+# → report-architect.md  report-writer.md  report-reviewer.md
+
+# Claude Codeセッションを（再）起動
+claude -r
+```
+
+### Step 8: オプションツール
+
+```bash
+# Discord通知（オプション）
+nano .claude/hooks/discord-notify.sh
+# DISCORD_WEBHOOK_URL を設定
+
+# ウェブページPDF化（オプション）
+sudo apt-get install wkhtmltopdf
+```
+
+## 🚀 クイックスタート
+
+上記のセットアップ完了後、レポート生成は2ステップです。
+
+### 1. 完全自動でレポート生成
 
 ```bash
 skill research-report-writer-orchestration
 ```
 
 このコマンドで以下が自動実行されます：
+
 1. トピックの拡張 → `update_report.md`
-2. 構造設計 → `report_structure.md`
+2. 構造設計（report-architectエージェント） → `report_structure.md`
 3. ツール推奨・インストール
-4. レポート執筆 → `report/*.pdf`
-5. 品質チェック・修正
-6. バージョン保存 → `versions/v1/`
+4. レポート執筆（report-writerエージェント） → `report/v1/*.pdf`
+5. 品質チェック（report-reviewerエージェント） → `report/v1/review_log.md`
+6. 修正（report-writerエージェント） → `report/v2/*.pdf` + `report/v2/revision_log.md`
 
 **所要時間:** 1-4時間（レポートの規模による）
 
-### 4. 参考文献のダウンロード（オプション）
+### 2. 参考文献のダウンロード（オプション）
 
 ```bash
 python3 .claude/scripts/download-references.py
@@ -71,9 +229,66 @@ python3 .claude/scripts/download-references.py
 
 PDFは `references/papers/` に保存されます。
 
-## 📚 5つのコアスキル
+## 🤖 アーキテクチャ
 
-Research Kitは5つの専門スキルで構成されています：
+### スキルとエージェントの役割分担
+
+Research Kitは**5つのスキル**と**3つのサブエージェント**で構成されています。メインのClaude（Sonnet）がオーケストレーターとして全体を管理し、タスクの重さに応じてスキルを直接実行するか、サブエージェントに委任するかを使い分けます。
+
+```
+メインClaude（Sonnet） ── オーケストレーター
+│
+├─ Step 1: Pre-flight Check（メインが直接実行）
+├─ Step 2: skill research-report-enhancer（Sonnet）
+├─ Step 3: report-architect エージェント（Opus）★
+├─ Step 4: skill skill-recommender（Sonnet）
+├─ Step 5: skill skill-mcp-installer（Sonnet）
+├─ Step 6a: report-writer エージェント（Opus）★
+├─ Step 6b: report-reviewer エージェント（Sonnet）★
+├─ Step 6c: 修正ループ（writer ↔ reviewer、最大3回）★
+└─ Step 7: Summary（メインが直接実行）
+
+★ = サブエージェントに委任
+```
+
+### なぜスキルとエージェントを使い分けるのか
+
+- **スキル（Steps 2, 4, 5）**: タスクが軽く、Sonnetで十分な定型処理
+- **エージェント（Steps 3, 6）**: コンテキストが大量に必要、またはOpusレベルの推論が必要な重いタスク
+
+エージェントはそれぞれ独立したコンテキストウィンドウで動くため、執筆で膨らんだコンテキストがレビューに影響せず、品質が保たれます。
+
+### 3つのサブエージェント
+
+| エージェント | モデル | 役割 | 配置場所 |
+|---|---|---|---|
+| report-architect | Opus | 構造設計（章立て・セクション・内容指示） | `.claude/agents/report-architect.md` |
+| report-writer | Opus | レポート執筆 + レビュー指摘の修正対応 | `.claude/agents/report-writer.md` |
+| report-reviewer | Sonnet | 品質チェック（指摘のみ、修正はしない） | `.claude/agents/report-reviewer.md` |
+
+### ライター↔レビュアー フィードバックループ
+
+Step 6では、執筆と品質チェックが自動的にループします：
+
+```
+[report-writer] 執筆 → report/vN/*.pdf
+       ↓
+[report-reviewer] レビュー → report/vN/review_log.md
+       ↓
+  指摘あり？──No──→ 完了
+       │
+      Yes
+       ↓
+[report-writer] review_log.mdを受けて修正 → report/vN/revision_log.md
+       ↓
+[report-reviewer] 再チェック
+       ↓
+  指摘あり？ → 最大3ループで終了
+```
+
+レビュアーは絶対に元ファイルを編集しません。指摘を`review_log.md`にまとめ、修正はすべてライターが行います。
+
+## 📚 5つのコアスキル
 
 ### 1. research-report-enhancer
 
@@ -90,7 +305,7 @@ skill research-report-enhancer
 
 ### 2. research-report-structure-planner
 
-**役割:** レポートの構造設計
+**役割:** レポートの構造設計（report-architectエージェントのフォールバック）
 
 ```bash
 skill research-report-structure-planner
@@ -99,6 +314,8 @@ skill research-report-structure-planner
 - `update_report.md` から詳細な章立てを作成
 - 各章のセクション・サブセクション・内容指示
 - 結果: `report_structure.md`
+
+**注:** オーケストレーション経由ではreport-architectエージェント（Opus）が構造設計を担当します。このスキルはエージェントが利用できない場合のフォールバックです。
 
 ### 3. skill-recommender
 
@@ -125,43 +342,32 @@ skill skill-mcp-installer
 
 ### 5. research-report-writer
 
-**役割:** レポート本体の執筆と品質管理
+**役割:** レポート本体の執筆と品質管理（report-writer/report-reviewerエージェントのフォールバック）
 
 ```bash
 skill research-report-writer
 ```
 
-**機能:**
-- LaTeX形式で直接執筆
-- 深い文献調査（50-100+件のソース）
-- 図表の自動生成
-- 引用管理
-- **品質チェック（2-4回反復）**
-  - Phase A: PDF形式チェック（日本語レンダリング、キャプション等）
-  - Phase B: 内容品質チェック（誤字、文法、論理、データ精度等）
-- **専門用語の自動説明**
-- **参考文献のダウンロード**
-- **バージョン自動保存**
-- PDF自動コンパイル
-
-結果: `report/*.pdf`, `report/*.tex`, `report/figures/`
+**注:** オーケストレーション経由ではreport-writerエージェント（Opus）とreport-reviewerエージェント（Sonnet）が執筆と品質管理を担当します。このスキルはエージェントが利用できない場合のフォールバックです。
 
 ## 🎨 オーケストレーション
 
 ### research-report-writer-orchestration
 
-全スキルを統合し、完全なワークフローを自動実行：
+全スキルとエージェントを統合し、完全なワークフローを自動実行：
 
 ```bash
 skill research-report-writer-orchestration
 ```
 
 **実行モード:**
+
 - **完全自動** - 全ステップを実行（初回推奨）
 - **スキップモード** - ツールインストールなど一部をスキップ
 - **レジューム** - 中断箇所から再開
 
 **ユーザー確認ポイント:**
+
 1. ワークフローモード選択
 2. 拡張トピックのレビュー
 3. 構造の承認
@@ -203,8 +409,8 @@ skill research-report-writer-orchestration
 python3 .claude/scripts/download-references.py
 
 # ファイル指定
-python3 .claude/scripts/download-references.py report/references.bib
-python3 .claude/scripts/download-references.py report/report.tex
+python3 .claude/scripts/download-references.py report/v1/references.bib
+python3 .claude/scripts/download-references.py report/v1/report.tex
 
 # ウェブページ変換をスキップ
 python3 .claude/scripts/download-references.py --no-webpages
@@ -214,21 +420,14 @@ python3 .claude/scripts/download-references.py -o custom/path
 ```
 
 **対応ソース:**
+
 - ✅ arXiv（論文PDF）
 - ✅ Unpaywall（オープンアクセス論文）
 - ✅ PubMed Central（医学論文）
 - ✅ ウェブページ（PDF変換、wkhtmltopdf必要）
 - ❌ 有料論文（機関アクセス必要）
 
-**ウェブページPDF化:**
-```bash
-# wkhtmltopdfのインストール（初回のみ）
-sudo apt-get install wkhtmltopdf
-```
-
 **保存場所:** `references/papers/`
-- 論文: `arxiv_*.pdf`, `doi_*.pdf`, `pmid_*.pdf`
-- ウェブページ: `webpage_*.pdf`
 
 ### Discord通知
 
@@ -240,6 +439,7 @@ sudo apt-get install wkhtmltopdf
 ```
 
 **カラーコード:**
+
 - 緑（成功）: `3066993`
 - オレンジ（警告）: `16753920`
 - 赤（エラー）: `15158332`
@@ -254,14 +454,19 @@ sudo apt-get install wkhtmltopdf
 ├── report_structure.md                # レポート構造
 │
 ├── report/                            # 生成されたレポート
-│   ├── {name}.pdf                     # 最終PDF
-│   ├── {name}.tex                     # LaTeXソース
-│   └── figures/                       # 図表
-│
-├── versions/                          # バージョン履歴
 │   ├── v1/                            # バージョン1
+│   │   ├── {name}.pdf                 # 最終PDF
+│   │   ├── {name}.tex                 # LaTeXソース
+│   │   ├── figures/                   # 図表
+│   │   ├── review_log.md             # レビュー指摘
+│   │   └── revision_log.md           # 修正記録
 │   ├── v2/                            # バージョン2
-│   └── .metadata                      # バージョン情報
+│   └── ...
+│
+├── versions/                          # バージョン履歴（スナップショット）
+│   ├── v1/
+│   ├── v2/
+│   └── .metadata
 │
 ├── references/                        # 参考文献
 │   └── papers/                        # ダウンロードしたPDF
@@ -272,6 +477,10 @@ sudo apt-get install wkhtmltopdf
 │
 ├── .claude/                           # Claude Code設定
 │   ├── settings.local.json            # 許可設定・hooks
+│   ├── agents/                        # サブエージェント定義
+│   │   ├── report-architect.md        # 構造設計（Opus）
+│   │   ├── report-writer.md           # 執筆+修正（Opus）
+│   │   └── report-reviewer.md         # 品質チェック（Sonnet）
 │   ├── hooks/
 │   │   ├── discord-notify.sh          # Discord通知スクリプト
 │   │   └── README.md                  # Hooks設定ガイド
@@ -281,10 +490,10 @@ sudo apt-get install wkhtmltopdf
 │       └── README.md                  # スクリプト使い方
 │
 ├── research-report-enhancer/          # スキル1: トピック拡張
-├── research-report-structure-planner/ # スキル2: 構造設計
+├── research-report-structure-planner/ # スキル2: 構造設計（フォールバック）
 ├── skill-recommender/                 # スキル3: ツール推奨
 ├── skill-mcp-installer/               # スキル4: ツールインストール
-├── research-report-writer/            # スキル5: レポート執筆
+├── research-report-writer/            # スキル5: レポート執筆（フォールバック）
 └── research-report-writer-orchestration/ # オーケストレーション
 ```
 
@@ -302,12 +511,16 @@ echo "- 調査項目2" >> report.md
 skill research-report-writer-orchestration
 
 # 3. PDFを確認
-ls report/*.pdf
+ls report/v1/*.pdf
 
-# 4. 参考文献をダウンロード
+# 4. レビュー結果を確認
+cat report/v1/review_log.md
+cat report/v1/revision_log.md
+
+# 5. 参考文献をダウンロード
 python3 .claude/scripts/download-references.py
 
-# 5. NotebookLMにインポート
+# 6. NotebookLMにインポート
 # references/papers/*.pdf をアップロード
 ```
 
@@ -315,18 +528,16 @@ python3 .claude/scripts/download-references.py
 
 ```bash
 # 1. 現在のバージョンを確認
-.claude/scripts/version-manager.sh list
+ls report/
 
 # 2. 追加したい内容を伝える
 # 「○○の章を追加してください」
 
-# 3. レポート再生成
-skill research-report-writer
+# 3. レポート再生成（新バージョンとして report/v2/ に保存）
+skill research-report-writer-orchestration
 
-# 4. 新バージョンとして自動保存（v2, v3...）
-
-# 5. 差分確認
-.claude/scripts/version-manager.sh diff v1 v2
+# 4. 差分確認
+diff report/v1/ report/v2/
 ```
 
 ### シナリオ3: 以前のバージョンに戻す
@@ -344,6 +555,25 @@ skill research-report-writer
 
 ## ⚙️ 設定
 
+### エージェントの設定
+
+サブエージェントは `.claude/agents/` に配置します。エージェントファイルを追加・変更した場合は、Claude Codeセッションの再起動が必要です。
+
+```bash
+# エージェント一覧の確認
+ls .claude/agents/
+
+# セッション再起動（エージェント変更後）
+# /exit → claude -r
+```
+
+各エージェントの`model`フィールドを変更することで、使用するモデルを切り替えられます：
+
+```yaml
+model: opus    # 高品質（構造設計、執筆向け）
+model: sonnet  # 高速・低コスト（レビュー向け）
+```
+
 ### Discord通知の設定
 
 1. **Webhook URLを取得:**
@@ -352,16 +582,19 @@ skill research-report-writer
    - URLをコピー
 
 2. **設定ファイルを編集:**
+
    ```bash
    nano .claude/hooks/discord-notify.sh
    ```
 
    8行目を変更：
+
    ```bash
    DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/あなたのURL"
    ```
 
 3. **テスト:**
+
    ```bash
    .claude/hooks/discord-notify.sh "テスト通知" "3066993"
    ```
@@ -369,6 +602,7 @@ skill research-report-writer
 ### 許可設定
 
 `.claude/settings.local.json` で以下を制御：
+
 - 自動実行を許可するコマンド
 - Hooksの設定
 - セッション開始時の動作
@@ -379,7 +613,7 @@ skill research-report-writer
 
 1. **完全自動モードを使用** - すべてのステップを実行
 2. **中間ファイルをレビュー** - `update_report.md` と `report_structure.md` を確認
-3. **品質チェックの結果を確認** - 何が修正されたか確認
+3. **品質チェックの結果を確認** - `report/vN/review_log.md` と `report/vN/revision_log.md` を読む
 
 ### 反復改善時
 
@@ -393,28 +627,61 @@ skill research-report-writer
 2. **2回目以降はスキップ可能** - 既にインストール済み
 3. **定期的にツール更新** - 新しいMCP serverが追加されることがある
 
+### エージェントのカスタマイズ
+
+1. **レビュー基準の調整** - `report-reviewer.md`のチェック項目を編集
+2. **執筆スタイルの変更** - `report-writer.md`の執筆方針を編集
+3. **構造設計の方針変更** - `report-architect.md`の設計原則を編集
+4. **変更後は必ずセッション再起動**
+
 ## 🐛 トラブルシューティング
 
 ### レポート生成失敗
 
 **問題:** LaTeXコンパイルエラー
 
-**解決策:**
-```bash
-# 日本語フォントのインストール
-sudo apt-get install fonts-noto-cjk fonts-ipafont fonts-ipaexfont
+**解決策:** 「セットアップ」のStep 4を確認してください。
 
-# XeLaTeXのインストール確認
+```bash
+# インストール確認
 which xelatex
+fc-list | grep -i noto
 ```
+
+### エージェントが起動しない
+
+**問題:** サブエージェントが呼び出されない
+
+**解決策:**
+
+1. `.claude/agents/` にファイルが配置されているか確認
+2. セッションを再起動（`/exit` → `claude -r`）
+3. エージェントのYAMLフロントマターが正しいか確認（name, model, tools）
+
+### 概念図の生成に失敗する
+
+**問題:** `generate_image.py` がエラーを出す
+
+**解決策:**
+
+1. Gemini APIキーが設定されているか確認: `echo $GEMINI_API_KEY`
+2. 依存パッケージを確認: `pip install google-genai Pillow`
+3. APIキーの取得方法は「セットアップ」のStep 6を参照
+
+### レビューループが終わらない
+
+**問題:** 3回ループしても指摘が残る
+
+**解決策:** これは正常な動作です。残った指摘は`report/vN/review_log.md`に記録されています。手動で`.tex`ファイルを修正してください。
 
 ### バージョン管理
 
 **問題:** "report/ directory not found"
 
 **解決策:** 先にレポートを生成してください
+
 ```bash
-skill research-report-writer
+skill research-report-writer-orchestration
 ```
 
 ### 参考文献ダウンロード
@@ -428,21 +695,24 @@ skill research-report-writer
 **問題:** 通知が届かない
 
 **解決策:**
+
 1. Webhook URLが正しいか確認
 2. Discordチャンネルの権限確認
 3. 手動テスト: `.claude/hooks/discord-notify.sh "Test" "3066993"`
 
 ## 📊 品質保証
 
-### 自動品質チェック
+### 自動品質チェック（report-reviewerエージェント）
 
 **Phase A: PDF形式チェック**
+
 - ✅ 日本語の正しいレンダリング
 - ✅ 図表キャプションと番号の整合性
 - ✅ セクション構造
 - ✅ 参照の完全性
 
 **Phase B: 内容品質チェック**
+
 - ✅ 誤字脱字（特に日本語の誤変換）
 - ✅ 文法エラー（助詞の誤用）
 - ✅ 論理的矛盾
@@ -450,13 +720,14 @@ skill research-report-writer
 - ✅ 引用の適切性
 - ✅ 用語の一貫性
 
-**反復回数:** 2-4回（すべてのチェックが通るまで）
+**フィードバックループ:** 最大3回（レビュアーが指摘 → ライターが修正 → 再チェック）
 
 ### 専門用語の説明
 
 すべての技術用語は初出時に自動的に説明されます：
 
 **フォーマット:**
+
 ```
 機械学習（Machine Learning: データからパターンを自動的に学習する技術）
 ```
@@ -473,7 +744,7 @@ skill research-report-writer
 ダウンロードした参考文献をNotebookLMで分析：
 
 1. `python3 .claude/scripts/download-references.py` 実行
-2. https://notebooklm.google.com/ を開く
+2. <https://notebooklm.google.com/> を開く
 3. 新しいノートブック作成
 4. `references/papers/*.pdf` をアップロード
 5. 論文の要約・質問を実行
@@ -490,6 +761,7 @@ git tag v2
 ## 📖 詳細ドキュメント
 
 - **スキル詳細:** 各スキルディレクトリの `SKILL.md`
+- **エージェント定義:** `.claude/agents/*.md`
 - **スクリプト使い方:** `.claude/scripts/README.md`
 - **Hooks設定:** `.claude/hooks/README.md`
 - **オーケストレーション:** `research-report-writer-orchestration/README.md`
@@ -500,14 +772,17 @@ git tag v2
 
 1. **エラーメッセージを確認** - 具体的な修正方法が含まれています
 2. **ドキュメントを参照** - 各ディレクトリのREADME.md
-3. **バージョンを復元** - 問題が発生したら以前のバージョンに戻す
-4. **ログを確認** - Claude Codeのログに詳細情報
+3. **レビューログを確認** - `report/vN/review_log.md` に品質問題の詳細
+4. **バージョンを復元** - 問題が発生したら以前のバージョンに戻す
+5. **ログを確認** - Claude Codeのログに詳細情報
 
 ## 🎉 完成したレポート
 
 レポートが完成すると：
-- ✅ `report/{name}.pdf` - 高品質なPDF
-- ✅ `versions/vX/` - バージョン保存済み
+
+- ✅ `report/vN/{name}.pdf` - 高品質なPDF
+- ✅ `report/vN/review_log.md` - 品質レビュー結果
+- ✅ `report/vN/revision_log.md` - 修正対応記録
 - ✅ `references/papers/` - 参考文献PDF
 - ✅ Discord通知（設定済みの場合）
 
@@ -515,6 +790,6 @@ NotebookLMにアップロードして、さらなる分析や質問応答に活�
 
 ---
 
-**Research Kit v2.0** - Powered by Claude Code
+**Research Kit v3.0** - Powered by Claude Code + Subagents
 
 *包括的な研究レポートを、数時間で自動生成* 📝✨
