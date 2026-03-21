@@ -6,9 +6,13 @@
 #   ./docker-run.sh                  # Start interactive shell
 #   ./docker-run.sh --auto           # Start Claude Code with --dangerously-skip-permissions
 #
-# Environment variables (set before running):
-#   GEMINI_API_KEY     - Google Gemini API key (optional, for conceptual figures)
-#   ANTHROPIC_API_KEY  - Anthropic API key (if not using Claude subscription)
+# First time setup:
+#   1. Run 'claude' on your HOST machine first and complete login
+#   2. Then use this script - it shares your login credentials with the container
+#
+# Environment variables (optional):
+#   GEMINI_API_KEY     - Google Gemini API key (for conceptual figures)
+#   ANTHROPIC_API_KEY  - Anthropic API key (if using API instead of subscription)
 #
 
 set -e
@@ -23,7 +27,17 @@ if ! docker image inspect "${IMAGE_NAME}" >/dev/null 2>&1; then
     docker build -t "${IMAGE_NAME}" "${PROJECT_DIR}"
 fi
 
-# Construct env flags
+# Auth mount: share host's Claude credentials with container
+AUTH_FLAGS=""
+if [ -d "${HOME}/.claude" ]; then
+    AUTH_FLAGS="-v ${HOME}/.claude:/home/researcher/.claude"
+    echo "  Auth: Using credentials from ~/.claude"
+fi
+if [ -f "${HOME}/.claude.json" ]; then
+    AUTH_FLAGS="${AUTH_FLAGS} -v ${HOME}/.claude.json:/home/researcher/.claude.json"
+fi
+
+# Env flags
 ENV_FLAGS=""
 if [ -n "${GEMINI_API_KEY}" ]; then
     ENV_FLAGS="${ENV_FLAGS} -e GEMINI_API_KEY=${GEMINI_API_KEY}"
@@ -40,6 +54,7 @@ if [ "$1" = "--auto" ]; then
     docker run -it --rm \
         --name "${CONTAINER_NAME}" \
         -v "${PROJECT_DIR}:/workspace" \
+        ${AUTH_FLAGS} \
         ${ENV_FLAGS} \
         "${IMAGE_NAME}" \
         claude --dangerously-skip-permissions
@@ -53,6 +68,7 @@ else
     docker run -it --rm \
         --name "${CONTAINER_NAME}" \
         -v "${PROJECT_DIR}:/workspace" \
+        ${AUTH_FLAGS} \
         ${ENV_FLAGS} \
         "${IMAGE_NAME}"
 fi

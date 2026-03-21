@@ -56,11 +56,12 @@ RUN pip install --break-system-packages \
 # Claude Code
 RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
 
-# Non-root user
-RUN groupadd --gid ${USER_GID} ${USERNAME} \
-    && useradd --uid ${USER_UID} --gid ${USER_GID} -m ${USERNAME} \
-    && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME} \
-    && chmod 0440 /etc/sudoers.d/${USERNAME}
+# Non-root user (Ubuntu 24.04 has 'ubuntu' user at UID 1000, reuse it)
+RUN usermod -l researcher ubuntu \
+    && groupmod -n researcher ubuntu \
+    && usermod -d /home/researcher -m researcher \
+    && echo "researcher ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/researcher \
+    && chmod 0440 /etc/sudoers.d/researcher
 
 # Workspace
 RUN mkdir -p /workspace && chown -R ${USERNAME}:${USERNAME} /workspace
