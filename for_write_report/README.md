@@ -130,11 +130,19 @@ APIキー（従量課金）を使う場合はこの手順は不要です。
 **3-3. コンテナの起動**
 
 ```bash
-# 対話モードで起動（中でclaudeコマンドを自分で実行）
 ./docker-run.sh
+```
 
-# 自動モードで起動（--dangerously-skip-permissions付き）
-./docker-run.sh --auto
+初回はDockerイメージのビルドに数分かかります。2回目以降は即起動します。
+
+コンテナ内に入ったら、Claude Codeを起動してください：
+
+```bash
+# 通常モード（毎回許可プロンプトが出る）
+claude
+
+# 自律モード（許可プロンプトなし、推奨）
+claude --dangerously-skip-permissions
 ```
 
 初回はDockerイメージのビルドに数分かかります。2回目以降は即起動します。
@@ -143,7 +151,7 @@ APIキー（従量課金）を使う場合はこの手順は不要です。
 
 ```bash
 export GEMINI_API_KEY="あなたのキー"
-./docker-run.sh --auto
+./docker-run.sh
 ```
 
 APIキーは <https://aistudio.google.com/apikey> から無料で取得できます。概念図・模式図の生成に使用します（データグラフのみの場合は不要）。
@@ -155,7 +163,7 @@ APIキーは <https://aistudio.google.com/apikey> から無料で取得できま
 ```bash
 # Discord通知（オプション）
 nano .claude/hooks/discord-notify.sh
-# DISCORD_WEBHOOK_URL を設定.
+# DISCORD_WEBHOOK_URL を設定
 ```
 
 ## 🚀 クイックスタート

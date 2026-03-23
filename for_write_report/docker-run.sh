@@ -3,12 +3,15 @@
 # Research Kit Docker launcher
 #
 # Usage:
-#   ./docker-run.sh                  # Start interactive shell
-#   ./docker-run.sh --auto           # Start Claude Code with --dangerously-skip-permissions
+#   ./docker-run.sh
 #
 # First time setup:
 #   1. Run 'claude' on your HOST machine first and complete login
 #   2. Then use this script - it shares your login credentials with the container
+#
+# Inside the container:
+#   claude                                # Normal mode
+#   claude --dangerously-skip-permissions # Autonomous mode
 #
 # Environment variables (optional):
 #   GEMINI_API_KEY     - Google Gemini API key (for conceptual figures)
@@ -46,29 +49,17 @@ if [ -n "${ANTHROPIC_API_KEY}" ]; then
     ENV_FLAGS="${ENV_FLAGS} -e ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}"
 fi
 
-# Run mode
-if [ "$1" = "--auto" ]; then
-    echo "Starting Claude Code in autonomous mode..."
-    echo "  Project: ${PROJECT_DIR}"
-    echo "  Mounted: /workspace"
-    docker run -it --rm \
-        --name "${CONTAINER_NAME}" \
-        -v "${PROJECT_DIR}:/workspace" \
-        ${AUTH_FLAGS} \
-        ${ENV_FLAGS} \
-        "${IMAGE_NAME}" \
-        claude --dangerously-skip-permissions
-else
-    echo "Starting Research Kit container..."
-    echo "  Project: ${PROJECT_DIR}"
-    echo "  Mounted: /workspace"
-    echo ""
-    echo "  Run 'claude' to start Claude Code"
-    echo "  Run 'claude --dangerously-skip-permissions' for autonomous mode"
-    docker run -it --rm \
-        --name "${CONTAINER_NAME}" \
-        -v "${PROJECT_DIR}:/workspace" \
-        ${AUTH_FLAGS} \
-        ${ENV_FLAGS} \
-        "${IMAGE_NAME}"
-fi
+echo "Starting Research Kit container..."
+echo "  Project: ${PROJECT_DIR}"
+echo "  Mounted: /workspace"
+echo ""
+echo "  Run 'claude' to start Claude Code"
+echo "  Run 'claude --dangerously-skip-permissions' for autonomous mode"
+echo ""
+
+docker run -it --rm \
+    --name "${CONTAINER_NAME}" \
+    -v "${PROJECT_DIR}:/workspace" \
+    ${AUTH_FLAGS} \
+    ${ENV_FLAGS} \
+    "${IMAGE_NAME}"
