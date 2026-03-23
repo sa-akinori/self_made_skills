@@ -606,6 +606,7 @@ Questions:
    - The agent will:
      - Determine the version number (check existing directories under report/)
      - Conduct literature searches using available MCP servers
+     - Use K-Dense skills: citation-management (references), scientific-writing (structure), literature-review (synthesis)
      - Write LaTeX content for each chapter
      - Generate figures and tables
      - Compile to PDF
@@ -626,6 +627,7 @@ Questions:
    - The agent will:
      - Phase A: Check PDF format (rendering, figures, references)
      - Phase B: Check content quality (typos, grammar, logic, data)
+     - Use K-Dense skills: peer-review (ScholarEval 8-dimension scoring), scholar-evaluation (publication readiness)
    - Output: `report/vN/review_log.md`
    - **CRITICAL**: The reviewer agent NEVER edits original .tex files
 
@@ -650,22 +652,26 @@ Questions:
 
 #### Sub-step 6c: Revision Loop (report-writer ↔ report-reviewer)
 
+**Version tracking**: Let N be the version produced in sub-step 6a (e.g., v1). Each revision cycle creates a new version: v(N+1), v(N+2), etc. The original draft is never overwritten.
+
 1. **Delegate revision to report-writer agent**:
    - Pass `report/vN/review_log.md` to the report-writer agent (activates revision mode)
    - The agent will:
+     - Copy all files from `report/vN/` to `report/v(N+1)/`
+     - Apply fixes to files in `report/v(N+1)/` only (original `report/vN/` is untouched)
      - Process each issue by severity (high → medium → low)
      - Apply fixes, partial fixes, or skip with reasoning
-     - Record all actions in `report/vN/revision_log.md`
-     - Recompile PDF
-   - Output: revised `report/vN/*.tex`, `report/vN/revision_log.md`, updated `report/vN/*.pdf`
+     - Record all actions in `report/v(N+1)/revision_log.md`
+     - Recompile PDF in `report/v(N+1)/`
+   - Output: `report/v(N+1)/*.tex`, `report/v(N+1)/revision_log.md`, `report/v(N+1)/*.pdf`
 
 2. **Delegate re-review to report-reviewer agent**:
-   - Pass the revised files to the report-reviewer agent
-   - The agent produces a new `report/vN/review_log.md`
+   - Pass the revised files in `report/v(N+1)/` to the report-reviewer agent
+   - The agent produces `report/v(N+1)/review_log.md`
 
 3. **Check re-review results**:
    - If **zero issues** → Loop complete, proceed to step completion
-   - If **issues remain AND loop count < 3** → Return to step 1 of sub-step 6c
+   - If **issues remain AND loop count < 3** → Increment N, return to step 1 of sub-step 6c
    - If **loop count >= 3** → Stop loop, inform user:
 
      ```
@@ -680,18 +686,22 @@ Questions:
    Revision Summary:
    ═══════════════════════════════════════
    Review iterations: [N]
+   Versions created:  v1 (draft) → v2 (revised) → v3 (if needed)
    Issues found:     [total across all iterations]
    Issues fixed:     [total fixed]
    Issues remaining: [total remaining]
+   Final version:    report/vM/
    ═══════════════════════════════════════
    ```
 
 #### Step 6 Completion
 
 1. **Verify final output**:
-   - Confirm report/vN/ directory contains .tex and .pdf files
+   - Identify the latest version directory (report/vM/ where M is the highest version number)
+   - Confirm it contains .tex and .pdf files
    - Get file sizes and page count
-   - Confirm review_log.md and revision_log.md exist (if revisions were made)
+   - Confirm revision_log.md exists (if revisions were made)
+   - Display: "Draft: report/v1/ | Final: report/vM/"
 
 2. **Mark step as complete**: ✓ Report Writing and Quality Review
 

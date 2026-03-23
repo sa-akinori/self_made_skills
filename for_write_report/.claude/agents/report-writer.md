@@ -70,6 +70,30 @@ report/v3/  ← after second review revision (if needed)
 3. If a source cannot be found, do not guess — annotate as "source unverified"
 4. Aim for 50+ references
 
+### K-Dense Skills Integration
+
+The following skills from K-Dense claude-scientific-writer are available in `.claude/skills/`. Use them actively during writing:
+
+**citation-management** — Use this skill for all citation and bibliography tasks:
+
+- Generate BibTeX entries from DOIs, PMIDs, or paper titles
+- Format references consistently (APA, Vancouver, Nature, etc.)
+- Validate citation completeness and correctness
+- Manage `references.bib` file
+
+**scientific-writing** — Use this skill for writing guidance:
+
+- Follow IMRaD structure (Introduction, Methods, Results, and Discussion)
+- Apply journal-specific formatting conventions
+- Ensure proper scientific tone and terminology
+- Structure arguments with appropriate hedging language
+
+**literature-review** — Use this skill when synthesizing multiple sources:
+
+- Organize references thematically
+- Identify research gaps
+- Create systematic comparison tables
+
 ### LaTeX Writing
 
 1. Write for XeLaTeX compilation

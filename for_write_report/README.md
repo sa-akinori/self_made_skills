@@ -52,6 +52,28 @@ rm -rf self_made_skills
 
 このディレクトリにスキル、エージェント、スクリプトなど必要なファイルがすべて配置されます。
 
+### Step 1.5: K-Dense スキルのインストール（推奨）
+
+K-Dense claude-scientific-writerから品質管理・引用管理・執筆支援のスキルを追加します（無料、APIキー不要）：
+
+```bash
+# claude-scientific-writerをクローン
+git clone https://github.com/K-Dense-AI/claude-scientific-writer.git /tmp/csw
+
+# 必要なスキルだけコピー
+mkdir -p .claude/skills
+cp -r /tmp/csw/skills/citation-management .claude/skills/
+cp -r /tmp/csw/skills/peer-review .claude/skills/
+cp -r /tmp/csw/skills/scientific-writing .claude/skills/
+cp -r /tmp/csw/skills/literature-review .claude/skills/
+cp -r /tmp/csw/skills/scholar-evaluation .claude/skills/
+
+# 不要なものを削除
+rm -rf /tmp/csw
+```
+
+これにより、レポート執筆時の引用管理と品質チェック時のスコアリングが強化されます。
+
 ### Step 2: report.md の作成
 
 レポートのテーマと調査項目を `report.md` に箇条書きで記述します：
